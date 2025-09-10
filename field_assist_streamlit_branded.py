@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+import base64
 
 st.set_page_config(page_title="Field Assist — Portal do Cliente", page_icon="🛠️", layout="wide")
 
@@ -105,7 +106,7 @@ def render_dashboard(kpis, ativos, alertas):
 
     st.caption("© Field Assist — personalize com seu logotipo e cores. Para dados reais, aponte para sua API/CMMS/IoT.")
 
-# --- Splash with clickable logo via query params (?started=1)
+# --- Splash with base64 logo clickable (?started=1)
 if "started" not in st.session_state:
     st.session_state["started"] = st.query_params.get("started", ["0"])[0] == "1"
 
@@ -122,16 +123,23 @@ if not st.session_state["started"]:
         unsafe_allow_html=True
     )
 
-    if Path("zanini_logo.png").exists():
+    logo_path = Path("zanini_logo.png")
+    if logo_path.exists():
+        with open(logo_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
         st.markdown(
-            '<div style="text-align:center;">'
-            '<a href="?started=1"><img src="zanini_logo.png" width="220"/></a>'
-            '</div>',
+            f'<div style="text-align:center;">'
+            f'<a href="?started=1"><img src="data:image/png;base64,{b64}" width="220"/></a>'
+            f'</div>',
             unsafe_allow_html=True
         )
     else:
-        st.button("🚀 Entrar no Dashboard", type="primary",
-                  on_click=lambda: st.query_params.update({"started":"1"}), use_container_width=True)
+        st.button(
+            "🚀 Entrar no Dashboard",
+            type="primary",
+            on_click=lambda: st.query_params.update({"started":"1"}),
+            use_container_width=True
+        )
 
     st.stop()
 
